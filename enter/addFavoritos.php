@@ -24,6 +24,3 @@ if (mysqli_num_rows($querySelect) > 0) {
         echo "0";
     }
 }
-if($connection){
-    mysqli_close($connection);
-}

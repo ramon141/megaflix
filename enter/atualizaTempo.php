@@ -39,7 +39,5 @@ if(mysqli_num_rows($result) > 0){
 //print_r($_POST);
 
 
-if($connection){
-    mysqli_close($connection);
-}
+
 ?>

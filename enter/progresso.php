@@ -23,9 +23,7 @@ function countTime($idVideo){
 
     $re = ($n2*100)/$n1;
 
-    if($connection){
-        mysqli_close($connection);
-    }
+    
     return $re;
 }
 
@@ -46,17 +44,13 @@ function whatTime($idVideo){
         $n2 = $fetchTempo['tempo'];
     }
 
-    if($connection){
-        mysqli_close($connection);
-    }
+    
     return $n2;
 }
 
 
 
 
-if($connection){
-    mysqli_close($connection);
-}
+
 
 ?>

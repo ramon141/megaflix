@@ -176,7 +176,5 @@ function verificar($id_obra){
 
 </html>
 <?php
-if($connection){
-    mysqli_close($connection);
-}
+
 ?>

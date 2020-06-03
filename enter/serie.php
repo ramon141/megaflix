@@ -1,12 +1,11 @@
 <?php
 require 'verificar.php';
 if (!($_GET && isset($_GET['id']))) {
-    header("Location: /");
+//    header("Location: /");
 }
 
 require '../conexao.php';
 require 'progresso.php';
-
 
 $isMobile = false;
 $useragent = $_SERVER['HTTP_USER_AGENT'];
@@ -30,7 +29,7 @@ $queryTemporadas = mysqli_query($connection, "select DISTINCT temporada from vid
 $queryFilme = mysqli_query($connection, "select * from obra where id_obra = $idObra");
 
 if (mysqli_num_rows($queryFilme) == 0) {
-    header("Location: /");
+    //header("Location: /");
 }
 
 $tempoVideo = 0;
@@ -105,7 +104,7 @@ function verificar($id_obra)
 
 
 
-    <?php require '../header.php'; ?>
+    <?php //require '../header.php'; ?>
 
     <div style="background-image: url(<?php echo $posterSerie; ?>); background-repeat: no-repeat; background-position: right; color: white; background-size: auto 100%;">
         <div style="background-image: url(../fundoFilme.png);background-size: 100%;  border-radius: 10px;">
@@ -389,7 +388,4 @@ function verificar($id_obra)
 
 </html>
 <?php
-if($connection){
-    mysqli_close($connection);
-}
 ?>
