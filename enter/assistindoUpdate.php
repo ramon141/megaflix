@@ -17,10 +17,8 @@ if(mysqli_num_rows($queryAssistindo) == 0){
 }
 
 while($fetchAssistindo = mysqli_fetch_array($queryAssistindo)){
-	while($fetchVideo = mysqli_fetch_array($queryVideo)){
-            echo $fetchVideo['video_id_video'];
-            break;
-	}
+    echo $fetchAssistindo['video_id_video'];
+    break;
 }
 
 

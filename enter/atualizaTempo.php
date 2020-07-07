@@ -21,8 +21,8 @@ if(mysqli_num_rows($result) > 0){
 		$idAssistindo = $fetchAssistindo['id_assisistindo'];
 	}
 
-	$query = mysqli_query($connection, "UPDATE assistindo SET tempo = $tempo WHERE id_assisistindo = $idAssistindo;");
-	//$sql = $sql . "UPDATE assistindo SET tempo = $tempo WHERE id_assisistindo = $idAssistindo;";
+	$query = mysqli_query($connection, "UPDATE assistindo SET tempo = $tempo, `date`='".date('Y-m-d H:m:s')."' WHERE id_assisistindo = $idAssistindo;");
+	//$sql = "UPDATE assistindo SET tempo = $tempo, `date`=".date('Y-m-d H:m:s')." WHERE id_assisistindo = $idAssistindo;";
 } else {
 	$query = mysqli_query($connection, "INSERT INTO `assistindo` (`id_assisistindo`, `tempo`, `usuario_id_usuario`, `video_id_video`) VALUES (NULL, '$tempo', '$usuario_id_usuario', '$id_video');");
 

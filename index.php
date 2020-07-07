@@ -1,18 +1,37 @@
 <?php
-require 'conexao.php';
-$filmes = mysqli_query($connection, "select * from obra where tipo = 'F'");
-$series = mysqli_query($connection, "select * from obra where tipo = 'S'");
 
 session_start();
+require 'conexao.php';
 
-if (!isset($_SESSION['nomeUsuario']) || $_SESSION['login'] != 1) {
+$filmes = mysqli_query($connection, "select * from obra where tipo = 'F' limit 10");
+$series = mysqli_query($connection, "select * from obra where tipo = 'S' limit 10");
+
+
+if ((!isset($_SESSION['nomeUsuario']) || $_SESSION['login'] != 1) && !isset($_COOKIE['hashIdUser'])) {
     $idUsuario = -1;
 } else {
-    $idUsuario = $_SESSION['idUsuario'];   
+    $idUsuario = $_SESSION['idUsuario'];
 }
 
+$queryAssistindo = mysqli_query($connection, "select * from assistindo inner join video on (assistindo.video_id_video = video.id_video ) inner join obra on (video.obra_id_obra = obra.id_obra) where assistindo.usuario_id_usuario = $idUsuario order by date desc");
 
-$queryAssistindo = mysqli_query($connection, "select * from assistindo inner join video on (assistindo.video_id_video = video.id_video ) inner join obra on (video.obra_id_obra = obra.id_obra) where assistindo.usuario_id_usuario = $idUsuario;");
+function verificar($id_obra){
+    require 'conexao.php';
+    $idUsuario = $_SESSION['idUsuario'];
+    $queryInsert = mysqli_query($connection, "SELECT `usuario_id_usuario`, `obra_id_obra` FROM `favoritos` WHERE usuario_id_usuario = '$idUsuario' and obra_id_obra='$id_obra'");
+    if (mysqli_num_rows($queryInsert) > 0) {
+        if ($connection) {
+            mysqli_close($connection);
+        }
+        return true;
+    } else {
+        if ($connection) {
+            mysqli_close($connection);
+        }
+        return false;
+    }
+    
+}
 
 ?>
 
@@ -26,15 +45,18 @@ $queryAssistindo = mysqli_query($connection, "select * from assistindo inner joi
     <link rel="sortcut icon" href="/logo.png" type="image/png" />
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <link href="stilo.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/swiper/css/swiper.css">
-    <link rel="stylesheet" href="https://unpkg.com/swiper/css/swiper.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.css">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
 
-    <script src="https://unpkg.com/swiper/js/swiper.js"></script>
-    <script src="https://unpkg.com/swiper/js/swiper.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.js"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" />
     <link rel="stylesheet" href="stilo.css">
     <link href="//db.onlinewebfonts.com/c/3a9f81b70e68b2aa90dd3e9398593a0b?family=DSariW01-SemiBold" rel="stylesheet" type="text/css" />
 
@@ -53,69 +75,29 @@ $queryAssistindo = mysqli_query($connection, "select * from assistindo inner joi
     <!-- Swiper -->
     <div class="swiper-container hoverTitle" style="height: 350px;">
         <div class="swiper-wrapper">
-            <div class="swiper-slide">
-                <div style="background-image: url(https://image.tmdb.org/t/p/w533_and_h300_bestv2/4oE4vT4q0AD2cX3wcMBVzCsME8G.jpg);width: 100%; height: 100%; background-repeat: no-repeat; background-size: 100%; padding-left: 9%;padding-top: 30px;">
-                    <div class="showHoverTitle" style="background-color: rgba(0,0,0,0.8); border-radius: 20px;color: white; width: 90%;">
-                        <br>
-                        <h1>Titulo</h1>
-                        <h6>A casa da família Griffin abriga dois adolescentes, um cachorrro cínico que é mais esperto que todos os humanos, e um bebê maléfico que arquiteta inúmeras tentativas de erradicar sua mãe.</h6>
-                        <br>
-                        <button class="btn btn-rounded btn-danger" style="border-radius: 22px;">Assistir<i class="fas fas fa-video pl-1"></i></button>
-                        <br><br>
-                    </div>
-                </div>
-            </div>
 
-            <div class="swiper-slide">
-                <div style="background-image: url(https://image.tmdb.org/t/p/w533_and_h300_bestv2/4oE4vT4q0AD2cX3wcMBVzCsME8G.jpg);width: 100%; height: 100%; background-repeat: no-repeat; background-size: 100%; padding-left: 9%;padding-top: 30px;">
-                    <div class="showHoverTitle" style="background-color: rgba(0,0,0,0.5); border-radius: 20px;color: white; width: 90%;">
-                        <br><br>
-                        <h1>Titulo</h1>
-                        <h6>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                            labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                            laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-                            voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-                            cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</h6>
-                        <br>
-                        <button class="btn btn-rounded btn-danger" style="border-radius: 22px;">Assistir<i class="fas fas fa-video pl-1"></i></button>
-                        <br><br>
-                    </div>
-                </div>
-            </div>
+            <?php 
+            $querySlider = mysqli_query($connection, "select * from obra where sinopse !='' and tipo='S' and poster is not null ORDER by nota_imdb desc limit 4;");
 
-            <div class="swiper-slide">
-                <div style="background-image: url(https://image.tmdb.org/t/p/w533_and_h300_bestv2/4oE4vT4q0AD2cX3wcMBVzCsME8G.jpg);width: 100%; height: 100%; background-repeat: no-repeat; background-size: 100%; padding-left: 9%;padding-top: 30px;">
-                    <div class="showHoverTitle" style="background-color: rgba(0,0,0,0.5); border-radius: 20px;color: white; width: 90%;">
-                        <br><br>
-                        <h1>Titulo</h1>
-                        <h6>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                            labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                            laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-                            voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-                            cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</h6>
-                        <br>
-                        <button class="btn btn-rounded btn-danger" style="border-radius: 22px;">Assistir<i class="fas fas fa-video pl-1"></i></button>
-                        <br><br>
+            while($fetchSlider = mysqli_fetch_array($querySlider)){
+                echo '
+                <div class="swiper-slide">
+                    <div style="background-image: url('.$fetchSlider['poster'].');width: 100%; height: 100%; background-repeat: no-repeat; background-size: 100%; padding-left: 9%;padding-top: 30px;">
+                        <div class="showHoverTitle" style="background-color: rgba(0,0,0,0.8); border-radius: 20px;color: white; width: 90%;">
+                            <br>
+                            <h1>'.$fetchSlider['titulo'].'</h1>
+                            <h6>'.substr($fetchSlider['sinopse'],0,187).'...</h6>
+                            <br>
+                            <button class="btn btn-rounded btn-danger" style="border-radius: 22px;" onclick="window.location.href=\'enter/serie.php?id='.$fetchSlider['id_obra'].'\'" >Assistir<i class="fas fas fa-video pl-1"></i></button>
+                            <br><br>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="swiper-slide">
-                <div style="background-image: url(https://image.tmdb.org/t/p/w533_and_h300_bestv2/4oE4vT4q0AD2cX3wcMBVzCsME8G.jpg);width: 100%; height: 100%; background-repeat: no-repeat; background-size: 100%; padding-left: 9%;padding-top: 30px;">
-                    <div class="showHoverTitle" style="background-color: rgba(0,0,0,0.5); border-radius: 20px;color: white; width: 90%;">
-                        <br><br>
-                        <h1>Titulo</h1>
-                        <h6>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                            labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                            laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-                            voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-                            cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</h6>
-                        <br>
-                        <button class="btn btn-rounded btn-danger" style="border-radius: 22px;">Assistir<i class="fas fas fa-video pl-1"></i></button>
-                        <br><br>
-                    </div>
-                </div>
-            </div>
+            ';
+            }
+
+             ?>
 
         </div>
         <!-- Add Pagination -->
@@ -246,9 +228,10 @@ $queryAssistindo = mysqli_query($connection, "select * from assistindo inner joi
         <h1 style="color: white;"><?php if(mysqli_num_rows($queryAssistindo)){echo "Assistindo";} ?></h1>
         <div class="owl-carousel owl-theme">
             <?php
-            $obra = 0;
+            $obra = "";
             while ($fetchAssistindo = mysqli_fetch_array($queryAssistindo)) {
-                if ($obra != $fetchAssistindo['obra_id_obra']) {
+                if(strpos($obra, $fetchAssistindo['obra_id_obra']."aa") === false){
+                    $obra = $obra . $fetchAssistindo['obra_id_obra']."aa";
                     echo '
                 <div class="item"
             style="background-image: url(' . $fetchAssistindo['miniatura'] . ');">
@@ -266,7 +249,15 @@ $queryAssistindo = mysqli_query($connection, "select * from assistindo inner joi
                         <i class="fas fas fa-play-circle"></i></button> <span>
                         &#160;&#160;&#160;' . $fetchAssistindo['titulo'] . '</span><br><br>
                     <span style="font-size: 13px;line-height: 0">' . substr($fetchAssistindo['sinopse'],0,105) . '...</span><br>
-                        <button title="Adicionar aos favoritos" class=" btn-floating btn-danger" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 30px; height: 30px;"><i class="fas fa-heart"></i></button>
+                        
+                        ';
+                        if(verificar($fetchAssistindo['id_obra'])){
+                            echo '<button title="Adicionar aos favoritos" class=" btn-floating btn-danger" onclick="addFavoritos('.$fetchAssistindo['id_obra'].',this);" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 30px; height: 30px;"><i class="fas fa-heart-broken"></i></button>';
+                        } else {
+                            echo '<button title="Adicionar aos favoritos" class=" btn-floating btn-danger" onclick="addFavoritos('.$fetchAssistindo['id_obra'].',this);" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 30px; height: 30px;"><i class="fas fa-heart"></i></button>';
+                        }
+                        echo'
+
                     <span title="Nota IMDB">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $fetchAssistindo['nota_imdb'] . '/10 <i class="fas fa-star"></i></span>
                     <br><br>
                 </div>
@@ -274,7 +265,6 @@ $queryAssistindo = mysqli_query($connection, "select * from assistindo inner joi
         </div>
                 ';
                 }
-                $obra = $fetchAssistindo['obra_id_obra'];
             }
             ?>
         </div>
@@ -297,7 +287,18 @@ $queryAssistindo = mysqli_query($connection, "select * from assistindo inner joi
                         <i class="fas fas fa-play-circle"></i></button> <span>
                         &#160;&#160;&#160;' . $fetchFilmes['titulo'] . '</span><br><br>
                     <span style="font-size: 13px;line-height: 0">' . substr($fetchFilmes['sinopse'],0,105) . '...</span><br>
-                        <button title="Adicionar aos favoritos" class=" btn-floating btn-danger" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 30px; height: 30px;"><i class="fas fa-heart"></i></button>
+                        
+                    ';
+
+                    if(verificar($fetchFilmes['id_obra'])){
+                            echo '<button title="Adicionar aos favoritos" class=" btn-floating btn-danger" onclick="addFavoritos('.$fetchFilmes['id_obra'].',this);" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 30px; height: 30px;"><i class="fas fa-heart-broken"></i></button>';
+                        } else {
+                            echo '<button title="Adicionar aos favoritos" class=" btn-floating btn-danger" onclick="addFavoritos('.$fetchFilmes['id_obra'].',this);" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 30px; height: 30px;"><i class="fas fa-heart"></i></button>';
+                        }
+
+
+                    echo'
+
                     <span title="Nota IMDB">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $fetchFilmes['nota_imdb'] . '/10 <i class="fas fa-star"></i></span>
                     <br><br>
                 </div>
@@ -344,7 +345,19 @@ $queryAssistindo = mysqli_query($connection, "select * from assistindo inner joi
                         <i class="fas fas fa-play-circle"></i></button> <span>
                         &#160;&#160;&#160;' . $fetchSeries['titulo'] . '</span><br><br>
                     <span style="font-size: 13px;line-height: 0">' . substr($fetchSeries['sinopse'],0,105) . '...</span><br>
-                        <button title="Adicionar aos favoritos" class=" btn-floating btn-danger" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 30px; height: 30px;"><i class="fas fa-heart"></i></button>
+                    
+                        ';
+
+
+                        if(verificar($fetchSeries['id_obra'])){
+                            echo '<button title="Adicionar aos favoritos" class=" btn-floating btn-danger" onclick="addFavoritos('.$fetchSeries['id_obra'].',this);" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 30px; height: 30px;"><i class="fas fa-heart-broken"></i></button>';
+                        } else {
+                            echo '<button title="Adicionar aos favoritos" class=" btn-floating btn-danger" onclick="addFavoritos('.$fetchSeries['id_obra'].',this);" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 30px; height: 30px;"><i class="fas fa-heart"></i></button>';
+                        }
+
+                        
+                    echo'
+
                     <span title="Nota IMDB">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $fetchSeries['nota_imdb'] . '/10 <i class="fas fa-star"></i></span>
                     <br><br>
                 </div>
@@ -373,6 +386,36 @@ $queryAssistindo = mysqli_query($connection, "select * from assistindo inner joi
                 }
             }
         })
+
+        function addFavoritos(obra,elem) {
+                    $.ajax({
+                        dataType: 'html',
+                        url: 'enter/addFavoritos.php?id='+obra,
+                        success: function(resposta) {
+                            if (resposta == "removido") {
+                                elem.innerHTML = '<i class="fas fa-heart"></i>';
+                                elem.title = 'Adicionar aos favoritos';
+                                alert('Removido da lista de favoritos');
+                            }
+                            if (resposta == 'naoremovido') {
+                                alert('Erro ao remover da lista de favoritos tente novamente mais tarde');
+                            }
+                            if (resposta == 1) {
+                                elem.innerHTML = `<i class='fas fa-heart-broken'></i>`;
+                                elem.title = 'Remover dos favoritos';
+                                alert('Adicionado a lista de favoritos');
+                            }
+                            if (resposta == 0) {
+                                alert('Erro ao inserir na lista de favoritos tente novamente mais tarde');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            alert(xhr.responseText);
+                        }
+
+                    });
+                }
+
     </script>
 
     <br><br><br><br><br><br><br>

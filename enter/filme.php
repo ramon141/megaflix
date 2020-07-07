@@ -19,6 +19,7 @@ while ($fetchFilme = mysqli_fetch_array($queryFilme)) {
     $miniaturaFilme = $fetchFilme['miniatura'];
     $notaFilme = $fetchFilme['nota_imdb'];
     $sinopseFilme = $fetchFilme['sinopse'];
+    $posterFilme = $fetchFilme['poster'];
 }
 
 $queryFilmeVideo = mysqli_query($connection, "SELECT * FROM `video` WHERE obra_id_obra = $idFilme");
@@ -26,7 +27,6 @@ $srcFilme = 'player.php?id=';
 while ($fetchFilmeVideo = mysqli_fetch_array($queryFilmeVideo)) {
     $srcFilme = $srcFilme . $fetchFilmeVideo['id_video'];
     $anoFilme = $fetchFilmeVideo['data'];
-    $posterFilme = $fetchFilmeVideo['poster'];
     break;
 }
 
@@ -73,12 +73,28 @@ function verificar($id_obra){
 
 <body style="background-image: url('/login/fundo.png'); background-color:rgba(39, 55, 71, 0.9); font-family: DSariW01-SemiBold; padding-left: 3%;">
 
+    <div class="modal" id="watch" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <iframe id="FrameIdVideo" height="400px" width="100%" frameborder="0"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?php require '../header.php'; ?>
 
     <div style="background-image: url(<?php echo $posterFilme; ?>); background-repeat: no-repeat; background-position: right; color: white; background-size: auto 100%;">
         <div style="background-image: url(../fundoFilme.png);background-size: 100%;  border-radius: 10px;">
             <div id="divSinopse" style="width: 40%;padding-left: 2%; padding-top: 2%; padding-right: 15px; text-align: justify;">
-                <h2><button title="Assistir" class=" btn-floating btn-primary" style="border-radius: 16px;border-width: 0px;cursor: pointer;"><i class="fas fa-play-circle"></i></button>&nbsp; <?php echo $nomeFilme; ?> <span style="font-size: 13px;"><?php echo $anoFilme; ?></span> </h2><br>
+                <h2><button title="Assistir" data-toggle="modal" data-target="#watch" onclick="document.getElementById('FrameIdVideo').src ='<?php echo $srcFilme ?>'" class=" btn-floating btn-primary" style="border-radius: 16px;border-width: 0px;cursor: pointer;"><i class="fas fa-play-circle"></i></button>&nbsp; <?php echo $nomeFilme; ?> <span style="font-size: 13px;"><?php echo $anoFilme; ?></span> </h2><br>
                 
                 <div class="progress" style="height: 10px;">
                     <div class="progress-bar" role="progressbar" aria-valuenow="0" style="width: 25%" aria-valuemin="0" aria-valuemax="100"></div>
@@ -170,6 +186,8 @@ function verificar($id_obra){
 
             });
         }
+
+
     </script>
 
 </body>

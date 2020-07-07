@@ -1,7 +1,8 @@
 <?php
 require 'verificar.php';
 if (!($_GET && isset($_GET['id']))) {
-//    header("Location: /");
+    header("Location: /");
+    die;
 }
 
 require '../conexao.php';
@@ -13,6 +14,11 @@ if (preg_match('/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|
     $isMobile = true;
 }
 
+if (session_status() != PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+$idUsuario = $_SESSION['idUsuario'];
 
 
 $idObra = $_GET['id'];
@@ -24,13 +30,16 @@ if (isset($_GET['temp'])) {
 
 $linkTemp = "serie.php?id=" . $idObra . "&temp=";
 
-$queryTemporadas = mysqli_query($connection, "select DISTINCT temporada from video where obra_id_obra = $idObra");
+$queryTemporadas = mysqli_query($connection, "select DISTINCT temporada from video where obra_id_obra = $idObra order by temporada");
 
 $queryFilme = mysqli_query($connection, "select * from obra where id_obra = $idObra");
 
 if (mysqli_num_rows($queryFilme) == 0) {
-    //header("Location: /");
+    header("Location: /");
+    die;
 }
+
+$querySelectGeneros = mysqli_query($connection, "select genero.* from genero_has_obra inner join genero on (genero_has_obra.genero_id_genero = genero.id_genero) where genero_has_obra.obra_id_obra = $idObra;");
 
 $tempoVideo = 0;
 while ($fetchSerie = mysqli_fetch_array($queryFilme)) {
@@ -52,18 +61,22 @@ function verificar($id_obra)
     $idUsuario = $_SESSION['idUsuario'];
     $queryInsert = mysqli_query($connection, "SELECT `usuario_id_usuario`, `obra_id_obra` FROM `favoritos` WHERE usuario_id_usuario = '$idUsuario' and obra_id_obra='$id_obra'");
     if (mysqli_num_rows($queryInsert) > 0) {
+        if ($connection) {
+            mysqli_close($connection);
+        }
         return true;
     } else {
+        if ($connection) {
+            mysqli_close($connection);
+        }
         return false;
     }
-    if ($connection) {
-        mysqli_close($connection);
-    }
+    
 }
 
 ?>
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt" id="html">
 
 <head>
     <meta charset="UTF-8">
@@ -82,9 +95,12 @@ function verificar($id_obra)
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.0-beta/css/bootstrap-select.min.css">
 
     <title>MegaFlix </title>
+    
 </head>
 
-<body style="background-image: url('/login/fundo.png'); background-color:rgba(39, 55, 71, 0.9); font-family: DSariW01-SemiBold; padding-left: 3%;">
+<body style="background-image: url('/login/fundo.png'); background-color:rgba(39, 55, 71, 0.9); font-family: DSariW01-SemiBold; padding-left: 3%;" id="body">
+
+    <button class="btn btn-danger" hidden="" onclick="closeIframe();" id="btnClose" style="position: absolute;right: 0px; z-index: 1001 !important; top: 30px; height:33px"><i class="fas fa-times"></i></button>
 
     <div class="modal" id="watch" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
@@ -103,186 +119,230 @@ function verificar($id_obra)
     </div>
 
 
+    <iframe style="position: absolute; top: 0px; left:0px;z-index: 1000 !important;" frameBorder="0" width="100%" height="100%" id="frameSrc" hidden=""></iframe>
 
-    <?php //require '../header.php'; ?>
+
+    <?php require '../header.php'; ?>
 
     <div style="background-image: url(<?php echo $posterSerie; ?>); background-repeat: no-repeat; background-position: right; color: white; background-size: auto 100%;">
         <div style="background-image: url(../fundoFilme.png);background-size: 100%;  border-radius: 10px;">
             <div id="divSinopse" style="width: 40%;padding-left: 2%; padding-top: 2%; padding-right: 15px; text-align: justify;">
                 <h1><button title="Assistir" onclick="continuarAss();" data-toggle="modal" data-target="#watch" class=" btn-floating btn-primary" style="border-radius: 16px;border-width: 0px;cursor: pointer;"><i class="fas fa-play-circle"></i></button>&nbsp; <?php echo $nomeSerie; ?></h1>
-                <span style="font-size: 13px;"><?php echo $sinopseSerie; ?></span><br>
+                
+                <style type="text/css">
+                    .tdClass{
+                        border: 1px solid;
+                        border-color: white;
+                        background-color: rgba(0,0,0,0);
+                        padding-left: 20px;
+                        padding-right: 20px;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        font-size: 12px  
+                    }
+                    .tdClass:hover{
+                        background-color: rgba(255,255,255,0.3);
+                        transition: all 0.4s;
+                    }
 
-                <br>
-                <div class="container">
-                    <div class="row">
-                        <div class="col-6" style="padding-left: 0px;">
-                            <div style="color: blue;">
+                </style>
 
-                                <style>
-                                    .selectr {
-                                        border-color: rgb(220, 53, 69);
-                                        width: 100%;
-                                        color: white;
-                                        height: 40px;
-                                        border-radius: 10px;
-                                        padding-left: 10px;
-                                        border-width: 3px;
-                                        cursor: pointer;
-                                        background-color: transparent;
-                                    }
+                <?php 
+                if(mysqli_num_rows($querySelectGeneros) > 0){
+                    echo '
+                        <div>
+                            <table style="border-collapse: separate; border-spacing: 10px;">
+                                <tbody>
+                                    <tr>
+                    ';
+                    while($fetchGeneros = mysqli_fetch_array($querySelectGeneros)){
+                        echo '<td class="tdClass" onclick="window.location.href=\'generos.php?id='.$fetchGeneros['id_genero'].'\';">'.$fetchGeneros['nome'].'</td>';
+                    }
+                    echo '
+                                    </tr>
+                              </tbody>
+                          </table>
+                        </div>
+                    ';
+                }
 
-                                    .selectr option {
-                                        color: rgb(220, 53, 69);
-                                    }
-                                </style>
+                ?>
+                          
 
 
-                                <?php
 
-                                if (mysqli_num_rows($queryTemporadas) > 0) {
-                                    echo '<select class="selectr" onchange="location = this.value;">';
-                                    while ($fetchTemporadas = mysqli_fetch_array($queryTemporadas)) {
-                                        echo '<option value="' . $linkTemp . $fetchTemporadas['temporada'] . '"';
-                                        if ($tempGet == $fetchTemporadas['temporada']) {
-                                            echo ' style="background-color: blue;" selected="selected"';
-                                        }
-                                        echo '>Temporada ' . $fetchTemporadas['temporada'] . '</option>';
-                                    }
-                                    echo '</select>';
+              <span style="font-size: 13px;"><?php echo $sinopseSerie; ?></span><br>
+              <br>
+              <div class="container">
+                <div class="row">
+                    <div class="col-6" style="padding-left: 0px;">
+                        <div style="color: blue;">
+
+                            <style>
+                                .selectr {
+                                    border-color: rgb(220, 53, 69);
+                                    width: 100%;
+                                    color: white;
+                                    height: 40px;
+                                    border-radius: 10px;
+                                    padding-left: 10px;
+                                    border-width: 3px;
+                                    cursor: pointer;
+                                    background-color: transparent;
                                 }
 
-                                ?>
+                                .selectr option {
+                                    color: rgb(220, 53, 69);
+                                }
+                            </style>
+
+
+                            <?php
+
+                            if (mysqli_num_rows($queryTemporadas) > 0) {
+                                echo '<select class="selectr" onchange="location = this.value;">';
+                                while ($fetchTemporadas = mysqli_fetch_array($queryTemporadas)) {
+                                    echo '<option value="' . $linkTemp . $fetchTemporadas['temporada'] . '"';
+                                    if ($tempGet == $fetchTemporadas['temporada']) {
+                                        echo ' style="background-color: blue;" selected="selected"';
+                                    }
+                                    echo '>Temporada ' . $fetchTemporadas['temporada'] . '</option>';
+                                }
+                                echo '</select>';
+                            }
+
+                            ?>
 
 
 
 
 
-                            </div>
                         </div>
-
-                        <!-- informacoes     -->
-                        <span style="font-size: 12px;">
-                            2020<br>
-                            IMDB: 10/10&nbsp;<i class="fas fa-star"></i>
-                            &nbsp;&nbsp;</span>
-
-                        <?php
-                        if (verificar($idObra)) {
-                            echo '<button onclick="addFavoritos();" id="heart" title="Remover dos favoritos" class=" btn-floating btn-danger" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 40px;"><i class="fas fa-heart-broken"></i></button>';
-                        } else {
-                            echo '<button onclick="addFavoritos();" id="heart" title="Adicionar aos favoritos" class=" btn-floating btn-danger" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 40px;"><i class="fas fa-heart"></i></button>';
-                        }
-                        ?>
-
-
-
                     </div>
+
+                    <!-- informacoes     -->
+                    <span style="font-size: 12px;">
+                        2020<br>
+                        IMDB: 10/10&nbsp;<i class="fas fa-star"></i>
+                    &nbsp;&nbsp;</span>
+
+                    <?php
+                    if (verificar($idObra)) {
+                        echo '<button onclick="addFavoritos();" id="heart" title="Remover dos favoritos" class=" btn-floating btn-danger" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 40px;"><i class="fas fa-heart-broken"></i></button>';
+                    } else {
+                        echo '<button onclick="addFavoritos();" id="heart" title="Adicionar aos favoritos" class=" btn-floating btn-danger" style="border-radius: 22px; border-width: 0px; cursor: pointer; width: 40px;"><i class="fas fa-heart"></i></button>';
+                    }
+                    ?>
+
+
+
                 </div>
-                <br>
-                <br>
-                <!-- <a href=""><img src="../play.png" alt="" width="80px" height="80px"><span>&nbsp;&nbsp;&nbsp;&nbsp;Assistir</span></a> -->
             </div>
-            <div style="background-image: linear-gradient(rgba(0,0,0,0), #273747);">&nbsp;</div>
+            <br>
+            <br>
+            <!-- <a href=""><img src="../play.png" alt="" width="80px" height="80px"><span>&nbsp;&nbsp;&nbsp;&nbsp;Assistir</span></a> -->
         </div>
-
+        <div style="background-image: linear-gradient(rgba(0,0,0,0), #273747);">&nbsp;</div>
     </div>
-    <br>
-    <h1 style="color: white;">Episódios(<?php echo mysqli_num_rows($queryListaSerie); ?>)</h1>
-    <!-- Comeco da listagem de episodios -->
-    <style>
-        .episodio {
-            padding: 1%;
-            color: white;
-            height: 13.17%;
-            width: 21.96%;
-            border-radius: 10px;
-        }
 
-        .imagem {
-            padding: 10px;
-            width: 25%;
+</div>
+<br>
+<h1 style="color: white;">Episódios(<?php echo mysqli_num_rows($queryListaSerie); ?>)</h1>
+<!-- Comeco da listagem de episodios -->
+<style>
+    .episodio {
+        padding: 1%;
+        color: white;
+        height: 13.17%;
+        width: 21.96%;
+        border-radius: 10px;
+    }
 
-        }
+    .imagem {
+        padding: 10px;
+        width: 25%;
 
-        .imagem img {
-            width: 100%;
-        }
+    }
 
-        .sinopse {
-            color: white;
-            padding-right: 30px;
-            width: 60%;
-            text-align: justify;
-        }
-    </style>
+    .imagem img {
+        width: 100%;
+    }
 
-    <div style="padding-right: 3%;color:white;">
-        <div style="border-radius: 10px;background-color:rgb(39, 55, 71);">
-            <?php
-            while ($fetchListaSerie = mysqli_fetch_array($queryListaSerie)) {
-                echo '
-                <table>
-                <tr>
-                    <td class="imagem" id="imagem" rowspan="3">
-                        <img style="border-radius: 10px;" src="' . $fetchListaSerie['poster'] . '" alt="">
-                    </td>
-                    <td class="sinopse" rowspan="3" style="padding: 10px;">
-                        
-                            <button data-toggle="modal" data-target="#watch" onclick="document.getElementById(\'FrameIdVideo\').src = \'player.php?id=' . $fetchListaSerie['id_video'] . '\';" title="Assistir" class=" btn-floating btn-primary" style="border-radius: 16px;border-width: 0px;cursor: pointer;"><i class="fas fa-play-circle"></i>&nbsp;&nbsp;' . $fetchListaSerie['nomeEpisodio'] . '</button>
+    .sinopse {
+        color: white;
+        padding-right: 30px;
+        width: 60%;
+        text-align: justify;
+    }
+</style>
 
-                            <br><br>';
+<div style="padding-right: 3%;color:white;">
+    <div style="border-radius: 10px;background-color:rgb(39, 55, 71);">
+        <?php
+        while ($fetchListaSerie = mysqli_fetch_array($queryListaSerie)) {
+            echo '
+            <table>
+            <tr>
+            <td class="imagem" id="imagem" rowspan="3">
+            <img style="border-radius: 10px;" src="' . $fetchListaSerie['poster'] . '" alt="">
+            </td>
+            <td class="sinopse" rowspan="3" style="padding: 10px;">
 
-                if (countTime($fetchListaSerie['id_video']) != 0) {
+            <button onclick="openIframe('.$fetchListaSerie['id_video'].');" title="Assistir" class=" btn-floating btn-primary" style="border-radius: 16px;border-width: 0px;cursor: pointer;"><i class="fas fa-play-circle"></i>&nbsp;&nbsp;'.$fetchListaSerie['episodio'].' - '.$fetchListaSerie['nomeEpisodio'] . '</button>
 
-                    echo '
-                            <div class="progress" style="width: 100%;height: 7px;">
-                                <div class="progress-bar" role="progressbar" style="width: ';
-                    echo countTime($fetchListaSerie['id_video']) . '%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>';
-                }
-                echo '
-                        <span style="font-size: 13px;">
-                        ';
+            <br><br>';
 
-                if (empty($fetchListaSerie['sinopse'])) {
-                    echo "Este episódio ainda não possui sinopse";
-                } else {
-                    echo $fetchListaSerie['sinopse'];
-                }
+            if (countTime($fetchListaSerie['id_video']) != 0) {
 
                 echo '
-                        </span>
+                <div class="progress" style="width: 100%;height: 7px;">
+                <div class="progress-bar" role="progressbar" style="width: ';
+                echo countTime($fetchListaSerie['id_video']) . '%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>';
+            }
+            echo '
+            <span style="font-size: 13px;">
+            ';
 
-                    </td>
-
-                    ';
-                if (!$isMobile) {
-                    echo '<td style="color: rgb(0, 112, 225); font-size: 13px;padding-top: 40px;">' . $fetchListaSerie['data'] . '</td>';
-                }
-
-                echo '
-                </tr>
-                ';
-
-                if (!$isMobile) {
-                    echo '<tr>
-                    <td style="color: rgb(0, 112, 225); font-size: 13px;">' . $tempoVideo . 'min</td>
-                </tr>
-                <tr>
-                    <td style="color: rgb(0, 112, 225); font-size: 13px;padding-bottom: 40px;">Classificação do conteúdo</td>
-                </tr>';
-                }
-
-                echo '</table>';
-                if ($isMobile) {
-                    echo '<hr style="border: 1px solid red">';
-                }
-                echo '<br>';
+            if (empty($fetchListaSerie['sinopse'])) {
+                echo "Este episódio ainda não possui sinopse";
+            } else {
+                echo $fetchListaSerie['sinopse'];
             }
 
-            ?>
+            echo '
+            </span>
 
-            <!-- Episodio comeco -->
+            </td>
+
+            ';
+            if (!$isMobile) {
+                echo '<td style="color: rgb(0, 112, 225); font-size: 13px;padding-top: 40px;">' . $fetchListaSerie['data'] . '</td>';
+            }
+
+            echo '
+            </tr>
+            ';
+
+            if (!$isMobile) {
+                echo '<tr>
+                <td style="color: rgb(0, 112, 225); font-size: 13px;">' . $tempoVideo . 'min</td>
+                </tr>
+                <tr>
+                <td style="color: rgb(0, 112, 225); font-size: 13px;padding-bottom: 40px;">Classificação do conteúdo</td>
+                </tr>';
+            }
+
+            echo '</table>';
+            if ($isMobile) {
+                echo '<hr style="border: 1px solid red">';
+            }
+            echo '<br>';
+        }
+
+        ?>
+
+        <!-- Episodio comeco -->
             <!-- <table>
                 <tr>
                     <td class='imagem' id="imagem" rowspan="3">
@@ -319,9 +379,12 @@ function verificar($id_obra)
     <!-- Fim da listagem de episodios -->
 
     <!-- Importacao dos scripts Comeco -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.bundle.min.js"></script>
+    
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.0-beta/js/bootstrap-select.min.js"></script>
     
     <script type="text/javascript" src="//wurfl.io/wurfl.js"></script>
@@ -350,6 +413,22 @@ function verificar($id_obra)
                 }
 
             });
+        }
+
+        function openIframe(id){
+            $('html,body').scrollTop(0);
+            document.getElementById('body').style = "overflow: hidden;background-image: url('/login/fundo.png'); background-color:rgba(39, 55, 71, 0.9); font-family: DSariW01-SemiBold; padding-left: 3%;";
+            document.getElementById('frameSrc').src = "player.php?id="+id;
+            $('#frameSrc').removeAttr('hidden');
+            $('#btnClose').removeAttr('hidden');
+            document.getElementById('frameSrc').focus();
+        }
+
+        function closeIframe(){
+            document.getElementById('body').style = "overflow: show;background-image: url('/login/fundo.png'); background-color:rgba(39, 55, 71, 0.9); font-family: DSariW01-SemiBold; padding-left: 3%;";
+            document.getElementById('frameSrc').setAttribute('hidden', '');
+            document.getElementById('btnClose').setAttribute('hidden', '');
+            document.getElementById('frameSrc').src = "";
         }
 
         function addFavoritos() {

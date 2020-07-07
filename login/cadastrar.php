@@ -16,6 +16,8 @@ if ($_POST && isset($_POST['m']) && strcmp($_POST['m'], "cadastrar") == 0) {
     $_SESSION['idUsuario'] = $connection->insert_id;
     $_SESSION['senha'] = $senha;
     $_SESSION['email'] = $email;
+    $_SESSION['audio'] = "D";
+    $_SESSION['puloAuto'] = 0;
 
     header("Location: /");
 
@@ -33,7 +35,10 @@ if ($_POST && isset($_POST['m']) && strcmp($_POST['m'], "cadastrar") == 0) {
             $_SESSION['idUsuario'] = $fetchLogin['id_usuario'];
             $_SESSION['senha'] = $senha;
             $_SESSION['email'] = $email;
+            $_SESSION['audio'] = $fetchLogin['audioPreferencial'];
+            $_SESSION['puloAuto'] = $fetchLogin['puloAuto'];
         }
+
         header("Location: /");
 
     } else {
